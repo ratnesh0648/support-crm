@@ -3,7 +3,7 @@ const path = require("path");
 const Database = require("better-sqlite3");
 
 // Single file DB — this is the entire "database server" for this project.
-// Path can be overridden via env var so Render/Railway can point it at a
+// 
 // persistent disk mount if one is configured.
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "data", "data.sqlite");
 
