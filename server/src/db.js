@@ -15,7 +15,10 @@ fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 
-// Two tables, exactly as specified: tickets, and notes (child of tickets).
+// Expanded schema — tickets, notes, and activity — covering the fields
+// meta.js and the richer version of tickets.js rely on (priority, assignee,
+// SLA due dates, response/resolution timestamps, note authorship, and an
+// activity/audit log per ticket).
 db.exec(`
   CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,6 +28,12 @@ db.exec(`
     subject TEXT NOT NULL,
     description TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'Open',
+    priority TEXT NOT NULL DEFAULT 'Medium',
+    assignee TEXT,
+    first_response_due TEXT,
+    resolve_due TEXT,
+    first_responded_at TEXT,
+    resolved_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
@@ -33,6 +42,18 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ticket_id TEXT NOT NULL,
     note_text TEXT NOT NULL,
+    note_type TEXT NOT NULL DEFAULT 'customer',
+    author TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (ticket_id) REFERENCES tickets (ticket_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS activity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    message TEXT NOT NULL,
+    author TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (ticket_id) REFERENCES tickets (ticket_id)
   );
